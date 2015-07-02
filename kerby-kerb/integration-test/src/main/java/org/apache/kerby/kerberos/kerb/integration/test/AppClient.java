@@ -36,7 +36,7 @@ public abstract class AppClient extends AppBase {
         usage(args);
 
         String hostName = args[0];
-        short port = (short) Integer.parseInt(args[1]);
+        int port = Integer.parseInt(args[1]);
 
         this.conn = Transport.Connector.connect(hostName, port);
     }

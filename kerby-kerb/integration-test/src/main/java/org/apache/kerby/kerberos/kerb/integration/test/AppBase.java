@@ -24,7 +24,13 @@ package org.apache.kerby.kerberos.kerb.integration.test;
  * a test.
  */
 public abstract class AppBase implements Runnable {
+    private Thread thread;
     private boolean isTestOK = false;
+
+    public synchronized void start() {
+        thread = new Thread(this);
+        thread.start();
+    }
 
     public synchronized void setTestOK(boolean isOK) {
         this.isTestOK = isOK;

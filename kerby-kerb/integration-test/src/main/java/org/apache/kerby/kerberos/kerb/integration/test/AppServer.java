@@ -35,11 +35,11 @@ public abstract class AppServer extends AppBase {
     public AppServer(String[] args) throws IOException {
         usage(args);
 
-        short listenPort = (short) Integer.parseInt(args[0]);
+        int listenPort = Integer.parseInt(args[0]);
         this.acceptor = new Transport.Acceptor(listenPort);
     }
 
-    public synchronized void terminate() {
+    public synchronized void stop() {
         terminated = true;
     }
 
