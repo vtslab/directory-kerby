@@ -424,8 +424,7 @@ public class KerbyContext implements GSSContextSpi {
         }
 
         try {
-            ApRequest.validate(serverKey, apReq,
-                    channelBinding == null ? null : channelBinding.getInitiatorAddress(), 5 * 60 * 1000);
+            ApRequest.validate(serverKey, apReq, channelBinding.getInitiatorAddress(), 5 * 60 * 1000);
         } catch (KrbException e) {
             throw new GSSException(GSSException.UNAUTHORIZED, -1, "ApReq verification failed: " + e.getMessage());
         }
@@ -477,20 +476,7 @@ public class KerbyContext implements GSSContextSpi {
         if (ctxState != STATE_ESTABLISHED) {
             throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for wrap");
         }
-
-        int len;
-        byte[] inBuf;
-        try {
-            len = is.available();
-            inBuf = new byte[len];
-            is.read(inBuf);
-        } catch (IOException e) {
-            throw new GSSException(GSSException.FAILURE, -1, "Error when get user data:" + e.getMessage());
-        }
-        if (gssEncryptor.isV2()) {
-            WrapTokenV2 token = new WrapTokenV2(this, inBuf, 0, len, msgProp);
-            token.wrap(os);
-        }
+        throw new GSSException(GSSException.UNAVAILABLE, -1, "Unsupported method");  // TODO: to be implemented
     }
 
     public byte[] wrap(byte[] inBuf, int offset, int len,
@@ -498,24 +484,12 @@ public class KerbyContext implements GSSContextSpi {
         if (ctxState != STATE_ESTABLISHED) {
             throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for wrap");
         }
-        byte[] ret = null;
-        if (gssEncryptor.isV2()) {
-            WrapTokenV2 token = new WrapTokenV2(this, inBuf, offset, len, msgProp);
-            ret = token.wrap();
-        }
-        return ret;
+        return null; // TODO: to be implemented
     }
 
     public void unwrap(InputStream is, OutputStream os,
                        MessageProp msgProp) throws GSSException {
-        if (ctxState != STATE_ESTABLISHED) {
-            throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for unwrap");
-        }
-
-        if (gssEncryptor.isV2()) {
-            WrapTokenV2 token = new WrapTokenV2(this, msgProp, is);
-            token.unwrap(os);
-        }
+        throw new GSSException(GSSException.UNAVAILABLE, -1, "Unsupported method");  // TODO: to be implemented
     }
 
     public byte[] unwrap(byte[] inBuf, int offset, int len,
@@ -523,82 +497,30 @@ public class KerbyContext implements GSSContextSpi {
         if (ctxState != STATE_ESTABLISHED) {
             throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for unwrap");
         }
-
-        byte[] ret = null;
-        if (gssEncryptor.isV2()) {
-            WrapTokenV2 token = new WrapTokenV2(this, msgProp, inBuf, offset, len);
-            ret = token.unwrap();
-        }
-        return ret;
+        return null; // TODO: to be implemented
     }
 
     public void getMIC(InputStream is, OutputStream os,
-                       MessageProp msgProp) throws GSSException {
-        if (ctxState != STATE_ESTABLISHED) {
-            throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for getMIC");
-        }
-
-        try {
-            int len = is.available();
-            byte[] inMsg = new byte[len];
-            is.read(inMsg);
-            if (gssEncryptor.isV2()) {
-                MicTokenV2 token = new MicTokenV2(this, inMsg, 0, len, msgProp);
-                token.getMic(os);
-            }
-        } catch (IOException e) {
-            throw new GSSException(GSSException.FAILURE, -1, "Error when get user data in getMIC:" + e.getMessage());
-        }
+                       MessageProp msgProp)
+            throws GSSException {
     }
 
     public byte[] getMIC(byte[] inMsg, int offset, int len,
                          MessageProp msgProp) throws GSSException {
-        if (ctxState != STATE_ESTABLISHED) {
-            throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for getMIC");
-        }
-
-        byte[] ret = null;
-        if (gssEncryptor.isV2()) {
-            MicTokenV2 token = new MicTokenV2(this, inMsg, offset, len, msgProp);
-            ret = token.getMic();
-        }
-        return ret;
+        return null; // TODO: to be implemented
     }
 
     public void verifyMIC(InputStream is, InputStream msgStr,
                           MessageProp msgProp) throws GSSException {
-        if (ctxState != STATE_ESTABLISHED) {
-            throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for verifyMIC");
-        }
-
-        try {
-            int tokLen = is.available();
-            byte[] inTok = new byte[tokLen];
-            int msgLen = msgStr.available();
-            byte[] inMsg = new byte[msgLen];
-
-           verifyMIC(inTok, 0, tokLen, inMsg, 0, msgLen, msgProp);
-        } catch (IOException e) {
-            throw new GSSException(GSSException.FAILURE, -1,
-                    "Error when get user data in verifyMIC:" + e.getMessage());
-        }
     }
 
     public void verifyMIC(byte[]inTok, int tokOffset, int tokLen,
                           byte[] inMsg, int msgOffset, int msgLen,
                           MessageProp msgProp) throws GSSException {
-        if (ctxState != STATE_ESTABLISHED) {
-            throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for verifyMIC");
-        }
-
-        if (gssEncryptor.isV2()) {
-            MicTokenV2 token = new MicTokenV2(this, msgProp, inTok, tokOffset, tokLen);
-            token.verify(inMsg, msgOffset, msgLen);
-        }
     }
 
     public byte[] export() throws GSSException {
-        throw new GSSException(GSSException.UNAVAILABLE, -1, "Unsupported export() method");
+        throw new GSSException(GSSException.UNAVAILABLE, -1, "Unsupported export method");
     }
 
     public void dispose() throws GSSException {
