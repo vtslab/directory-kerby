@@ -469,7 +469,11 @@ public class KerbyContext implements GSSContextSpi {
 
     public int getWrapSizeLimit(int qop, boolean confReq, int maxTokSize)
             throws GSSException {
-        return 65536;   // TODO: to be implemented
+        if (gssEncryptor.isV2()) {
+            return WrapTokenV2.getMsgSizeLimit(qop, confReq, maxTokSize, gssEncryptor);
+        } else {
+            return WrapTokenV1.getMsgSizeLimit(qop, confReq, maxTokSize, gssEncryptor);
+        }
     }
 
     public void wrap(InputStream is, OutputStream os, MessageProp msgProp)
@@ -490,6 +494,9 @@ public class KerbyContext implements GSSContextSpi {
         if (gssEncryptor.isV2()) {
             WrapTokenV2 token = new WrapTokenV2(this, inBuf, 0, len, msgProp);
             token.wrap(os);
+        } else {
+            WrapTokenV1 token = new WrapTokenV1(this, inBuf, 0, len, msgProp);
+            token.wrap(os);
         }
     }
 
@@ -498,9 +505,12 @@ public class KerbyContext implements GSSContextSpi {
         if (ctxState != STATE_ESTABLISHED) {
             throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for wrap");
         }
-        byte[] ret = null;
+        byte[] ret;
         if (gssEncryptor.isV2()) {
             WrapTokenV2 token = new WrapTokenV2(this, inBuf, offset, len, msgProp);
+            ret = token.wrap();
+        } else {
+            WrapTokenV1 token = new WrapTokenV1(this, inBuf, offset, len, msgProp);
             ret = token.wrap();
         }
         return ret;
@@ -515,6 +525,9 @@ public class KerbyContext implements GSSContextSpi {
         if (gssEncryptor.isV2()) {
             WrapTokenV2 token = new WrapTokenV2(this, msgProp, is);
             token.unwrap(os);
+        } else {
+            WrapTokenV1 token = new WrapTokenV1(this, msgProp, is);
+            token.unwrap(os);
         }
     }
 
@@ -524,9 +537,12 @@ public class KerbyContext implements GSSContextSpi {
             throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for unwrap");
         }
 
-        byte[] ret = null;
+        byte[] ret;
         if (gssEncryptor.isV2()) {
             WrapTokenV2 token = new WrapTokenV2(this, msgProp, inBuf, offset, len);
+            ret = token.unwrap();
+        } else {
+            WrapTokenV1 token = new WrapTokenV1(this, msgProp, inBuf, offset, len);
             ret = token.unwrap();
         }
         return ret;
@@ -545,6 +561,9 @@ public class KerbyContext implements GSSContextSpi {
             if (gssEncryptor.isV2()) {
                 MicTokenV2 token = new MicTokenV2(this, inMsg, 0, len, msgProp);
                 token.getMic(os);
+            } else {
+                MicTokenV1 token = new MicTokenV1(this, inMsg, 0, len, msgProp);
+                token.getMic(os);
             }
         } catch (IOException e) {
             throw new GSSException(GSSException.FAILURE, -1, "Error when get user data in getMIC:" + e.getMessage());
@@ -557,9 +576,12 @@ public class KerbyContext implements GSSContextSpi {
             throw new GSSException(GSSException.NO_CONTEXT, -1, "Context invalid for getMIC");
         }
 
-        byte[] ret = null;
+        byte[] ret;
         if (gssEncryptor.isV2()) {
             MicTokenV2 token = new MicTokenV2(this, inMsg, offset, len, msgProp);
+            ret = token.getMic();
+        } else {
+            MicTokenV1 token = new MicTokenV1(this, inMsg, offset, len, msgProp);
             ret = token.getMic();
         }
         return ret;
@@ -593,6 +615,9 @@ public class KerbyContext implements GSSContextSpi {
 
         if (gssEncryptor.isV2()) {
             MicTokenV2 token = new MicTokenV2(this, msgProp, inTok, tokOffset, tokLen);
+            token.verify(inMsg, msgOffset, msgLen);
+        } else {
+            MicTokenV1 token = new MicTokenV1(this, msgProp, inTok, tokOffset, tokLen);
             token.verify(inMsg, msgOffset, msgLen);
         }
     }
